@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html class="no-js" lang="zxx">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Google Play Games</title>
+    <meta name="description" content="Google Play Games">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="keywords"
+          content="bootstrap, ecommerce, ecommerce html, beauty, cosmetic shop, beauty products, cosmetic, beauty shop, cosmetic store, shop, beauty store, spa, cosmetic, cosmetics, beauty salon">
+
+    <!-- Font CSS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com/">
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+    <link href="/static/css/css2.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/swiper-bundle.min.css">
+    <link rel="stylesheet" href="/static/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/css/fancybox.min.css">
+    <link rel="stylesheet" href="/static/css/nice-select.css">
+    <link rel="stylesheet" href="/static/css/style.min.css">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+          integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+
+    <!-- 可选的 Bootstrap 主题文件（一般不用引入） -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap-theme.min.css"
+          integrity="sha384-6pzBo3FDv/PJ8r2KRkGHifhEocL+1X2rVCTTkUfGk7/0pbek5mMa1upzvWbrUbOZ" crossorigin="anonymous">
+
+</head>
+
+<body>
+<section class="section-space" xmlns="http://www.w3.org/1999/html">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="section-title text-center">
+                    <h2 class="title">Goole Play Games</h2>
+                </div>
+                <div class="searchWrapper">
+                    <form action="" method="get">
+                        <input name='keywords' class="section-title text-center"
+                               placeholder="search"
+                               style="width:800px;height:50px;margin-left:180px">
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="row mb-n4 mb-sm-n10 g-3 g-sm-6">
+            {{ range $i, $game := .games }}
+            <div class="col-6 col-lg-4 mb-4 mb-sm-9">
+                <!--== Start Product Item ==-->
+                <div class="product-item" href="/detail/{{ $game.Id }}" style="float: left">
+                    <div class="product-thumb" href="/detail">
+                        <a href="/detail/{{ $game.Id }}"><img
+                                src="{{ $game.Image }}"
+                                width="60" height="60" alt="Image-HasTech"></a>
+                        <div>
+                            <div class="product-rating" style="margin:0">
+                                <div class="rating">
+                                    {{ $game.StarRating }}&nbsp;&nbsp;&nbsp;{{ $game.ContentRating }}
+                                </div>
+                            </div>
+                            <div class="product-info" style="padding:0">
+                                <h4 class="title"><a href="/detail/{{ $game.Id }}">{{ $game.Name }}</a></h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--== End prPduct Item ==-->
+            </div>
+            {{ end }}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="pagination-wrap mt-30">
+                {{if le .pageId .maxPage}}
+                <nav aria-label="Page navigation" style="margin-left:650px">
+                    <ul class="pagination pagination-lg">
+                        <li>
+                            <a href="?page=0" aria-label="Next">
+                                <span aria-hidden="true"><</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href={{if gt .pageId 0}} "?page={{ cal .pageId -1 }}" {{ else }} "#" {{ end }}
+                            aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+
+                        {{ $temp := .pageId }}
+                        {{ $temp1 := cal .maxPage -2 }}
+                        {{ $temp2 := .maxPage}}
+
+                        {{ if le .pageId 3 }}
+                            {{ range $i, $v := .rangeTimes }}
+                                {{ if eq $temp $i }}
+                                    <li class="active"><a>{{ $v }}</a></li>
+                                {{ else }}
+                                    <li><a href="?page={{ $i }}">{{ $v }}</a></li>
+                                {{ end }}
+                            {{ end }}
+
+                        {{ else if ge .pageId  $temp1 }}
+                        {{ range $i, $v := .rangeTimes}}
+                        {{ if calEq $temp $temp2 $i }}
+                        <li class="active"><a>{{ cal3 $temp2 $i }}</a></li>
+                        {{ else }}
+                        <li><a href="?page={{ cal2 $temp2 $i }}">{{ cal3 $temp2 $i }}</a></li>
+                        {{ end }}
+                        {{ end }}
+
+                        {{ else }}
+                        <li><a href="?page={{ cal $temp -2 }}">{{ cal $temp -2 }}</a></li>
+                        <li><a href="?page={{ cal $temp -1 }}">{{ cal $temp -1 }}</a></li>
+                        <li class="active"><a>{{ .pageId }}</a></li>
+                        <li><a href="?page={{ cal $temp 1 }}">{{ cal $temp 1 }}</a></li>
+                        <li><a href="?page={{ cal $temp 2 }}">{{ cal $temp 2 }}</a></li>
+                        {{ end }}
+
+                        <li>
+                            <a href={{ if le $temp $temp2 }} "?page={{ cal $temp 1 }}" {{ else }} "#" {{ end }}
+                            aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="?page={{cal .maxPage  -1}}" aria-label="Next">
+                                <span aria-hidden="true">></span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+                {{ end }}
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<script src="/static/js/modernizr-3.11.7.min.js"></script>
+<script src="/static/js/jquery-3.6.0.min.js"></script>
+<script src="/static/js/jquery-migrate-3.3.2.min.js"></script>
+<script src="/static/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/swiper-bundle.min.js"></script>
+<script src="/static/js/fancybox.min.js"></script>
+<script src="/static/js/jquery.nice-select.min.js"></script>
+<script src="/static/js/main.js"></script>
+<!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"
+        integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>
