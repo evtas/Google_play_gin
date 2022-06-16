@@ -195,6 +195,10 @@ func main() {
 	})
 	r.LoadHTMLGlob("templates/*")
 
+	r.GET("/", func(context *gin.Context) {
+		context.Redirect(http.StatusMovedPermanently, "/games/search")
+	})
+
 	r.GET("/games/search", func(context *gin.Context) {
 		//获取当前页id
 		page := context.Query("page")
