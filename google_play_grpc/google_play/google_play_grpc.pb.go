@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.19.4
-// source: google_play.proto
+// source: google_play.protos
 
 package google_play
 
@@ -101,5 +101,5 @@ var GooglePlay_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "google_play.proto",
+	Metadata: "google_play.protos",
 }

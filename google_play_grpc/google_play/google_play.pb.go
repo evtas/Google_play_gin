@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.28.0
 // 	protoc        v3.19.4
-// source: google_play_grpc/google_play/google_play.proto
+// source: google_play_grpc/google_play/google_play.protos
 
 package google_play
 

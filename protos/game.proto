@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = ".;pb";
+
+service Gamer{
+  rpc GetGameDetail (GameRequest) returns (GameResponse){}
+}
+
+message GameRequest{
+  int32 id = 1;
+}
+
+message GameResponse {
+  int32 id = 1 ;
+  string name = 2;
+  string author = 3;
+  string starRating = 4;
+  string downloadTimes = 5;
+  string contentRating = 6;
+  string introduction = 7;
+  string updateTime = 8;
+  string image = 9;
+}
