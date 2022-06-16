@@ -11,8 +11,6 @@ import (
 	"strings"
 )
 
-const PAGESIZE = 36
-
 type Game struct {
 	Id            int
 	Name          string
@@ -24,6 +22,8 @@ type Game struct {
 	UpdateTime    string
 	Image         string
 }
+
+const PAGESIZE = 36
 
 func cal(x, y int) (z int) {
 	return x + y
@@ -41,22 +41,45 @@ func calEq(x, y, z int) bool {
 	return y+z-5 == x
 }
 
-func main() {
+func getPGitemsAmount() int {
+	var amount int
+	db, err := sql.Open("postgres", "user=postgres password=binshao123 dbname=google_play_games sslmode=disable")
+	if err != nil {
+		fmt.Println("连接数据库失败!err: ", err.Error())
+		return -1
+	}
+	defer db.Close()
+	var rows *sql.Rows
+	rows, err = db.Query("select count(*) from games_games")
+	if err != nil {
+		fmt.Println("获取数据库总记录数失败!err: ", err.Error())
+	}
+
+	for rows.Next() {
+		rows.Scan(&amount)
+		fmt.Println(amount)
+		return amount
+	}
+	return -1
+}
+
+func getPagedGames(pageId int) []*Game {
 	//连接pg数据库
 	db, err := sql.Open("postgres", "user=postgres password=binshao123 dbname=google_play_games sslmode=disable")
 	if err != nil {
 		fmt.Println("连接PG数据库失败！err：", err.Error())
-		return
+		return nil
 	}
 	defer db.Close()
 	fmt.Println("连接PG成功")
 
 	//获取pg里的数据
 	var rows *sql.Rows
-	rows, err = db.Query("select id, name, author, star_rating, download_times, content_rating, introduction, update_time, image from games_games")
+	s := "select id, name, author, star_rating, download_times, content_rating, introduction, update_time, image from games_games limit " + fmt.Sprint(PAGESIZE) + " offset " + fmt.Sprint(pageId*PAGESIZE)
+	rows, err = db.Query(s)
 	if err != nil {
 		fmt.Println("查询数据失败!err:", err.Error())
-		return
+		return nil
 	}
 	defer rows.Close()
 	fmt.Println("查询数据成功!")
@@ -87,10 +110,79 @@ func main() {
 		}
 		games = append(games, game)
 	}
+	return games
+}
 
-	//for i := 0; i < len(games); i++ {
-	//	fmt.Println(games[i].name)
-	//}
+func searchGame(keywords string) []*Game {
+	fmt.Println(keywords)
+	//连接pg数据库
+	db, err := sql.Open("postgres", "user=postgres password=binshao123 dbname=google_play_games sslmode=disable")
+	if err != nil {
+		fmt.Println("连接PG数据库失败！err：", err.Error())
+		return nil
+	}
+	defer db.Close()
+	fmt.Println("连接PG成功")
+
+	//获取pg里的数据
+	var rows *sql.Rows
+	s := "select id, name, author, star_rating, download_times, content_rating, introduction, update_time, image from games_games where lower(name) ilike regexp_replace(concat('%','" + strings.ToLower(keywords) + "','%'),'\\\\','\\\\\\','g')"
+	rows, err = db.Query(s)
+	if err != nil {
+		fmt.Println("查询数据失败!err:", err.Error())
+		return nil
+	}
+	defer rows.Close()
+	fmt.Println("查询数据成功!")
+
+	//保存数据到结构体中
+	var games []*Game
+	for rows.Next() {
+		var id int
+		var name string
+		var author string
+		var starRating string
+		var downloadTimes string
+		var contentRating string
+		var introduction string
+		var updateTime string
+		var image string
+		rows.Scan(&id, &name, &author, &starRating, &downloadTimes, &contentRating, &introduction, &updateTime, &image)
+		game := &Game{
+			Id:            id,
+			Name:          name,
+			Author:        author,
+			StarRating:    starRating,
+			DownloadTimes: downloadTimes,
+			ContentRating: contentRating,
+			Introduction:  introduction,
+			UpdateTime:    updateTime,
+			Image:         image,
+		}
+		games = append(games, game)
+	}
+	fmt.Println(games)
+	return games
+}
+
+func getgameDetail(id int) Game {
+	//连接pg数据库
+	db, err := sql.Open("postgres", "user=postgres password=binshao123 dbname=google_play_games sslmode=disable")
+	if err != nil {
+		fmt.Println("连接PG数据库失败！err：", err.Error())
+		return Game{}
+	}
+	defer db.Close()
+	fmt.Println("连接PG成功")
+
+	game := Game{}
+	//获取pg里的数据
+	db.QueryRow("select id, name, author, star_rating, download_times, content_rating, introduction, update_time, image from games_games where id = "+fmt.Sprint(id)).Scan(&game.Id, &game.Name, &game.Author, &game.StarRating, &game.DownloadTimes, &game.ContentRating, &game.Introduction, &game.UpdateTime, &game.Image)
+	return game
+}
+
+func main() {
+	amount := getPGitemsAmount()
 
 	//设置路由器
 	r := gin.Default()
@@ -103,28 +195,23 @@ func main() {
 	})
 	r.LoadHTMLGlob("templates/*")
 
-	r.GET("/search", func(context *gin.Context) {
+	r.GET("/games/search", func(context *gin.Context) {
+		//获取当前页id
 		page := context.Query("page")
 		keywords := context.Query("keywords")
 		pageId, _ := strconv.Atoi(page)
 
-		pagedGames := games[pageId*PAGESIZE : (pageId+1)*PAGESIZE]
-		maxPage := len(games) / PAGESIZE
+		//获取分好页的数据
+		pagedGames := getPagedGames(pageId)
+
+		//获得搜索关键字得到的游戏
+		if keywords != "" {
+			pagedGames = searchGame(keywords)
+		}
+
+		maxPage := amount / PAGESIZE
 		rangeTimes := [5]int{1, 2, 3, 4, 5}
 
-		if keywords != "" {
-			var searchGames []*Game
-			for _, game := range games {
-				if strings.Contains(strings.ToLower(game.Name), strings.ToLower(keywords)) {
-					searchGames = append(searchGames, game)
-				}
-			}
-			if len(searchGames) < PAGESIZE {
-				pagedGames = searchGames
-			} else {
-				pagedGames = searchGames[pageId*PAGESIZE : (pageId+1)*PAGESIZE]
-			}
-		}
 		context.HTML(http.StatusOK, "search.html", gin.H{
 			"games":      pagedGames,
 			"pageId":     pageId,
@@ -135,14 +222,7 @@ func main() {
 	r.GET("/detail/:idx", func(context *gin.Context) {
 		idx := context.Param("idx")
 		index, _ := strconv.Atoi(idx)
-		var flag int
-		for i, g := range games {
-			if g.Id == index {
-				flag = i
-				break
-			}
-		}
-		game := games[flag]
+		game := getgameDetail(index)
 		context.HTML(http.StatusOK, "detail.html", gin.H{
 			"game": game,
 		})
@@ -151,6 +231,9 @@ func main() {
 		index := context.Param("index")
 		context.File("/Users/Ben/download_apks/" + index + ".apk")
 	})
+	r.GET("/nginx-test", func(context *gin.Context) {
+		context.String(http.StatusOK, "port：%s", context.GetHeader("X-real-IP"))
+	})
 
-	r.Run()
+	r.Run(":8001")
 }

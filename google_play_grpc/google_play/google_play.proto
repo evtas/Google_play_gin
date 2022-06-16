@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package google_play;
+
+option go_package = "google_play_grpc/google_play";
+
+service GooglePlay {
+  rpc GetGameDetail(GameId) returns (GameDetail) {}
+}
+
+message GameId {
+  int32 id = 1;
+}
+
+message GameDetail {
+  int32 id = 1 ;
+  string name = 2;
+  string author = 3;
+  string starRating = 4;
+  string downloadTimes = 5;
+  string contentRating = 6;
+  string introduction = 7;
+  string updateTime = 8;
+  string genre = 9;
+}
