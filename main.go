@@ -5,11 +5,17 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	pb "google_play_games/pb"
 	"html/template"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
 )
+
+const port = "8001"
 
 type Game struct {
 	Id            int
@@ -182,6 +188,14 @@ func getgameDetail(id int) Game {
 }
 
 func main() {
+	//连接grpc服务
+	conn, err := grpc.Dial("0.0.0.0:50052", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("did't not connect: %v", err)
+	}
+	defer conn.Close()
+	client := pb.NewGamerClient(conn)
+
 	amount := getPGitemsAmount()
 
 	//设置路由器
@@ -196,6 +210,7 @@ func main() {
 	r.LoadHTMLGlob("templates/*")
 
 	r.GET("/", func(context *gin.Context) {
+		fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 		context.Redirect(http.StatusMovedPermanently, "/games/search")
 	})
 
@@ -223,9 +238,19 @@ func main() {
 			"rangeTimes": rangeTimes,
 		})
 	})
-	r.GET("/detail/:idx", func(context *gin.Context) {
+	r.GET("/games/detail/:idx", func(context *gin.Context) {
 		idx := context.Param("idx")
 		index, _ := strconv.Atoi(idx)
+
+		req := &pb.GameRequest{Id: int32(index)}
+		res, err := client.GetGameDetail(context, req)
+		if err != nil {
+			context.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		fmt.Println(res)
 		game := getgameDetail(index)
 		context.HTML(http.StatusOK, "detail.html", gin.H{
 			"game": game,
@@ -239,5 +264,7 @@ func main() {
 		context.String(http.StatusOK, "port：%s", context.GetHeader("X-real-IP"))
 	})
 
-	r.Run(":8001")
+	if err := r.Run(":8001"); err != nil {
+		log.Fatalf("could not run server: %v", err)
+	}
 }

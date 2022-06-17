@@ -7,16 +7,16 @@ import (
 	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	pb "google_play_games/google_play_grpc/google_play"
+	pb "google_play_games/pb"
 	"log"
 	"net"
 )
 
 type GameService struct {
-	pb.UnimplementedGooglePlayServer
+	pb.UnimplementedGamerServer
 }
 
-func (*GameService) GetGameDetail(ctx context.Context, req *pb.GameId) (*pb.GameDetail, error) {
+func (*GameService) GetGameDetail(ctx context.Context, req *pb.GameRequest) (*pb.GameResponse, error) {
 	fmt.Println(req.Id)
 	fmt.Printf("get game %d detail from server\n", req.Id)
 
@@ -30,7 +30,7 @@ func (*GameService) GetGameDetail(ctx context.Context, req *pb.GameId) (*pb.Game
 
 	var rows *sql.Rows
 
-	s := "select id, name, author, star_rating, download_times, content_rating, introduction, update_time, genre from games_games where id = " + fmt.Sprint(req.Id)
+	s := "select id, name, author, star_rating, download_times, content_rating, introduction, update_time, image from games_games where id = " + fmt.Sprint(req.Id)
 	fmt.Println(s)
 	rows, err = db.Query(s)
 	if err != nil {
@@ -47,11 +47,11 @@ func (*GameService) GetGameDetail(ctx context.Context, req *pb.GameId) (*pb.Game
 		var contentRating string
 		var introduction string
 		var updateTime string
-		var genre string
+		var image string
 
-		rows.Scan(&id, &name, &author, &starRating, &downloadTimes, &contentRating, &introduction, &updateTime, &genre)
+		rows.Scan(&id, &name, &author, &starRating, &downloadTimes, &contentRating, &introduction, &updateTime, &image)
 
-		return &pb.GameDetail{
+		return &pb.GameResponse{
 			Id:            int32(id),
 			Name:          name,
 			Author:        author,
@@ -60,7 +60,7 @@ func (*GameService) GetGameDetail(ctx context.Context, req *pb.GameId) (*pb.Game
 			ContentRating: contentRating,
 			Introduction:  introduction,
 			UpdateTime:    updateTime,
-			Genre:         genre,
+			Image:         image,
 		}, nil
 	}
 	return nil, nil
@@ -72,7 +72,7 @@ func NewServer() *GameService {
 
 func StartServer() {
 	fmt.Println("start...")
-	lis, err := net.Listen("tcp", "127.0.0.1:9091")
+	lis, err := net.Listen("tcp", "0.0.0.0:50052")
 	if nil != err {
 		fmt.Println(err.Error())
 		return
@@ -81,7 +81,7 @@ func StartServer() {
 	var opts []grpc.ServerOption
 
 	grpcServer := grpc.NewServer(opts...)
-	pb.RegisterGooglePlayServer(grpcServer, NewServer())
+	pb.RegisterGamerServer(grpcServer, NewServer())
 
 	reflection.Register(grpcServer)
 	grpcServer.Serve(lis)

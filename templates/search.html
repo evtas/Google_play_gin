@@ -51,9 +51,9 @@
             {{ range $i, $game := .games }}
             <div class="col-6 col-lg-4 mb-4 mb-sm-9">
                 <!--== Start Product Item ==-->
-                <div class="product-item" href="/detail/{{ $game.Id }}" style="float: left">
+                <div class="product-item" href="/games/detail/{{ $game.Id }}" style="float: left">
                     <div class="product-thumb" href="/detail">
-                        <a href="/detail/{{ $game.Id }}"><img
+                        <a href="/games/detail/{{ $game.Id }}"><img
                                 src="{{ $game.Image }}"
                                 width="60" height="60" alt="Image-HasTech"></a>
                         <div>
@@ -63,7 +63,7 @@
                                 </div>
                             </div>
                             <div class="product-info" style="padding:0">
-                                <h4 class="title"><a href="/detail/{{ $game.Id }}">{{ $game.Name }}</a></h4>
+                                <h4 class="title"><a href="/games/detail/{{ $game.Id }}">{{ $game.Name }}</a></h4>
                             </div>
                         </div>
                     </div>
